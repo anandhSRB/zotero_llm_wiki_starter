@@ -1,25 +1,14 @@
-# Filterable/sortable view over the wiki layer.
-#
-# Edits here, or through Obsidian's Bases UI (the Filters button,
-# dragging columns, adding views), are permanent -- no script
-# overwrites this file.
-#
-# "Needs filling" and "Needs linking" are the working queues during a
-# first build: they show which topic pages are still stubs and which
-# have been drafted but not yet cross-linked.
-
 filters:
   and:
     - file.inFolder("topics")
-    - 'file.ext == "md"'
+    - file.ext == "md"
     - or:
         - tags.contains("domain")
         - tags.contains("hub")
         - tags.contains("topic")
-
 views:
   - type: table
-    name: "All"
+    name: All
     order:
       - file.name
       - tags
@@ -31,9 +20,8 @@ views:
         direction: ASC
       - property: parent
         direction: ASC
-
   - type: table
-    name: "By domain"
+    name: By domain
     groupBy:
       property: parent
       direction: ASC
@@ -42,25 +30,22 @@ views:
       - tags
       - status
       - last_updated
-
   - type: table
-    name: "Domains"
+    name: Domains
     filters: tags.contains("domain")
     order:
       - file.name
       - last_updated
-
   - type: table
-    name: "Needs filling"
-    filters: 'status == "stub"'
+    name: Needs filling
+    filters: status == "stub"
     order:
       - file.name
       - parent
       - last_updated
-
   - type: table
-    name: "Needs linking"
-    filters: 'status == "drafted"'
+    name: Needs linking
+    filters: status == "drafted"
     order:
       - file.name
       - parent

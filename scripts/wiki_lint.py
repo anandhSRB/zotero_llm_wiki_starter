@@ -78,6 +78,10 @@ def check_base_files(problems):
 
 def lint():
     problems, warnings = [], []
+    # PDF issues are collected apart from the rest: when a vault is copied
+    # between machines without its PDFs, every source reports the same two
+    # problems and buries everything else. See summarise_pdf_issues().
+    pdf_issues = []
     notes, all_files = build_indices()
 
     # Obsidian resolves [[x]] ambiguously when two notes share a stem.
@@ -124,17 +128,28 @@ def lint():
             if not target:
                 continue
             if target not in notes and target not in all_files:
-                problems.append(f"BROKEN LINK: {rel} -> [[{target}]]")
-            elif in_topics and target in source_citekeys:
+                if target.lower().endswith(".pdf"):
+                    pdf_issues.append(f"BROKEN EMBED: {rel} -> [[{target}]]")
+                else:
+                    problems.append(f"BROKEN LINK: {rel} -> [[{target}]]")
+            elif (in_topics and target in source_citekeys
+                  and md.name not in STAGING_FILES):
+                # A citation from a staging file is not processing: parking
+                # a source in uncategorized.md records why it is waiting,
+                # it does not synthesise it. So those sources stay in the
+                # ORPHANED list, which makes the lint alone the queue of
+                # unprocessed material rather than something to be
+                # manually combined with the staging file by hand.
                 cited_by[target].add(md.stem)
 
         if in_sources:
-            _check_source(rel, md, fm, problems)
+            _check_source(rel, md, fm, problems, pdf_issues)
         elif in_topics and md.name not in STAGING_FILES:
             _check_topic(rel, md, fm, topic_stems, problems, warnings,
                          status_counts, tag_counts)
 
     check_base_files(problems)
+    problems.extend(summarise_pdf_issues(pdf_issues, len(source_citekeys)))
 
     orphaned = sorted(source_citekeys - set(cited_by))
     if orphaned:
@@ -160,7 +175,34 @@ def lint():
     }
 
 
-def _check_source(rel, md, fm, problems):
+def summarise_pdf_issues(pdf_issues, n_sources):
+    """Collapse PDF issues when the whole vault is simply missing its PDFs.
+
+    A vault synced between machines (or cloned from git, where PDFs are
+    gitignored) has every source declaring has_pdf: true with no file
+    beside it. That is one fact about the machine, not N problems with
+    the notes, and reporting it N times hides everything else. When even
+    one PDF is present the situation is a genuine per-note mismatch, so
+    each is reported individually.
+    """
+    if not pdf_issues:
+        return []
+    if list(SOURCES_DIR.glob("*.pdf")):
+        return pdf_issues
+
+    declared = sum(1 for i in pdf_issues if i.startswith("has_pdf=true"))
+    return [
+        f"PDFs ABSENT ON THIS MACHINE: {declared} of {n_sources} source(s) "
+        f"declare has_pdf: true, and sources/ holds no PDF at all. Expected "
+        f"if the vault was copied or cloned without them (they are "
+        f"gitignored). Run the sync adapter here to fetch them, or ignore "
+        f"this if you read PDFs elsewhere -- but note a deep read is "
+        f"impossible on this machine. ({len(pdf_issues) - declared} dead "
+        f"embed(s) folded into this line.)"
+    ]
+
+
+def _check_source(rel, md, fm, problems, pdf_issues):
     """sources/ is machine-maintained; flag anything the adapter got wrong."""
     citekey = fm.get("citekey")
     if not citekey:
@@ -175,9 +217,9 @@ def _check_source(rel, md, fm, problems):
     if "has_pdf" in fm:
         actual = list(SOURCES_DIR.glob(f"{md.stem}*.pdf"))
         if fm["has_pdf"] and not actual:
-            problems.append(f"has_pdf=true but no PDF on disk: {rel}")
+            pdf_issues.append(f"has_pdf=true but no PDF on disk: {rel}")
         if not fm["has_pdf"] and actual:
-            problems.append(
+            pdf_issues.append(
                 f"has_pdf=false but PDF(s) exist: {rel} ({[p.name for p in actual]})"
             )
 

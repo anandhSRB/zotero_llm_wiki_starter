@@ -24,11 +24,18 @@ If material genuinely fits no domain, that is a signal worth raising —
 report it as an observation and let the user decide whether the domain
 list should change. Changing it is a deliberate, separate conversation.
 
-Read the current list before starting; do not assume it from memory:
+Read the current list before starting; do not assume it from memory.
+`AGENTS.md` names them under `### The domains in this vault` — that is
+what "do not invent a new domain" is checked against. Then confirm
+against the vault itself, which is authoritative if the two disagree:
 
 ```bash
 grep -l 'tags: \[domain\]' topics/*.md
 ```
+
+If they disagree, say so: either `AGENTS.md` has fallen behind a domain
+page, or a domain page was added without being recorded. Both are worth
+raising rather than silently picking one.
 
 For a page that could fit two domains, **read its actual content** rather
 than guessing from the filename, and pick the one its core content is

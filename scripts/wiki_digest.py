@@ -32,7 +32,12 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from wiki_config import SOURCES_DIR, TOPICS_DIR, parse_frontmatter  # noqa: E402
+from wiki_config import (  # noqa: E402
+    SOURCES_DIR,
+    STAGING_FILES,
+    TOPICS_DIR,
+    parse_frontmatter,
+)
 
 WIKILINK_RE = re.compile(r"\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|[^\]]*)?\]\]")
 
@@ -53,7 +58,9 @@ def cited_citekeys():
     """Every citekey any topic page cites, and by which pages."""
     out = {}
     for md in TOPICS_DIR.glob("*.md"):
-        if md.stem.startswith("_"):
+        # Staging files are excluded for the same reason as in the lint:
+        # parking a source is not processing it.
+        if md.stem.startswith("_") or md.name in STAGING_FILES:
             continue
         for t in WIKILINK_RE.findall(md.read_text(encoding="utf-8", errors="replace")):
             out.setdefault(t.strip(), set()).add(md.stem)

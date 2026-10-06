@@ -97,7 +97,17 @@ the user. That is why this gate is worth the minute it costs.
 
 **Gate: do not continue until the user has confirmed the domain list.**
 
-Then create one page per domain from `templates/domain-page.md`, with
+Then do two things.
+
+**Record the agreed list in `AGENTS.md`**, replacing the placeholder under
+`### The domains in this vault` with one row per domain — slug, what it
+covers, and the boundary sentence for any pair that could be confused.
+This is what makes the list *fixed* in a checkable way: later sessions
+read it to know what they may file under, and `wiki-update` has something
+to check "do not invent a new domain" against. Without it the list exists
+only implicitly across the domain pages.
+
+**Then create one page per domain** from `templates/domain-page.md`, with
 `tags: [domain]`, `status: stub`, the agreed boundary sentence in the
 Overview, and an empty Sub-topics list. Keep slugs to 2–3 words.
 
@@ -133,11 +143,17 @@ in the graph view, where long names are unreadable. Drop filler words
 when every page would carry it, and drop words implied by the parent
 domain.
 
+Examples from different fields, to show the cut rather than the subject:
+
 | Prefer | Not |
 |---|---|
+| `statin-adherence` | `patient-adherence-to-statin-therapy-in-primary-care` |
 | `wall-boiling-closures` | `cfd-wall-boiling-closure-models-for-two-fluid-simulations` |
-| `nanofluid-coolants` | `nanofluid-coolants-for-fuel-cell-thermal-management` |
-| `altitude-performance` | `pemfc-altitude-and-low-pressure-performance-studies` |
+| `attention-mechanisms` | `transformer-self-attention-mechanism-architecture-studies` |
+| `force-majeure-drafting` | `drafting-force-majeure-clauses-in-commercial-contracts` |
+
+In each case the dropped words are either filler (`studies`, `models`,
+`-ing` padding) or implied by the parent domain.
 
 Then **present the full set and stop**:
 

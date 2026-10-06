@@ -84,6 +84,26 @@ never a judgement call:
 | `[hub]` | yes | yes |
 | `[topic]` | yes | no |
 
+### The domains in this vault
+
+<!-- EMPTY STARTER: wiki-bootstrap Phase 1 replaces this block with the
+     domains you agree, one row each. Until then there are none, and
+     wiki-update has nothing to file new material under. -->
+
+_None yet — run `wiki-bootstrap`, which asks you what they should be._
+
+Once filled, this table is **orientation, not the source of truth**: the
+domain pages themselves are. Verify against the vault rather than
+trusting this table, which can fall behind:
+
+```bash
+grep -l 'tags: \[domain\]' topics/*.md
+```
+
+Where two domains could be confused, state the boundary here in one
+sentence as well as on both domain pages. That sentence prevents most
+misfiling.
+
 ### The domain list is fixed once agreed
 
 The domains are settled with the user at bootstrap and then treated as
@@ -95,7 +115,12 @@ decide — changing the list is a separate, deliberate conversation.
 ### Staging files
 
 `topics/uncategorized.md` is **not** part of the hierarchy: it carries no
-`parent` and no `status`, and the lint exempts it. It holds sources that
+`parent` and no `status`, and the lint exempts it. **A citation from a
+staging file does not count as processing a source** — parking something
+records why it is waiting, it does not synthesise it — so those sources
+stay in the ORPHANED list. That is deliberate: it makes the lint alone
+the complete queue of unprocessed material, with nothing to combine by
+hand. It holds sources that
 have not clustered yet, plus clusters awaiting approval, so a proposal
 survives between sessions. Re-read it on every update — a source that did
 not cluster last time may cluster with new arrivals.
