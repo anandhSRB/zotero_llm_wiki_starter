@@ -1,0 +1,50 @@
+# Filterable/sortable view over every source in this vault.
+#
+# Written once by zotero_sync.py if missing, then never overwritten --
+# so edits you make here, or through Obsidian's Bases UI (the Filters
+# button, dragging columns, adding views), are permanent.
+#
+# Click a column header to sort. Use the Filters button, or edit the
+# `filters:` blocks below, to narrow what shows up -- for example add
+# 'year >= 2020' or 'tags.contains("your-tag")'.
+
+filters:
+  and:
+    - file.inFolder("sources")
+    - 'file.ext == "md"'
+
+views:
+  - type: table
+    name: "All sources"
+    order:
+      - file.name
+      - title
+      - authors
+      - year
+      - pub_type
+      - journal
+      - tags
+      - doi
+      - has_pdf
+
+  - type: table
+    name: "Missing PDF"
+    filters:
+      and:
+        - "!has_pdf"
+    order:
+      - file.name
+      - title
+      - authors
+      - year
+
+  - type: table
+    name: "By type"
+    groupBy:
+      property: pub_type
+      direction: ASC
+    order:
+      - file.name
+      - title
+      - year
+      - journal

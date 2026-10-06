@@ -1,0 +1,27 @@
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Obsidian local state: workspace layout, caches, plugin data. The
+# .base index files under sources/ and topics/ ARE tracked -- they are
+# view definitions you want to share, not local state.
+.obsidian/workspace*.json
+.obsidian/cache/
+.obsidian/plugins/
+.obsidian/logs/
+
+# Machine-specific config (paths to your reference-manager export).
+# Share wiki.config.example.json instead.
+wiki.config.json
+
+# Sync adapter bookkeeping, if you point state_file inside the vault.
+.llm_wiki_sync_state.json
+
+# PDFs are copies of what lives in your reference manager, and are
+# usually both large and not yours to redistribute. Markdown notes
+# under sources/ are tracked; the PDFs beside them are not.
+sources/*.pdf
+
+# Python
+__pycache__/
+*.py[cod]

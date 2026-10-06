@@ -1,0 +1,8 @@
+{
+  "_comment": "Copy this file to wiki.config.json and edit. Only needed if you use the Zotero adapter; everything else derives its paths automatically. wiki.config.json is gitignored, so machine-specific paths never get shared.",
+
+  "zotero_export_json": "~/Zotero/exports/library.json",
+  "zotero_bbt_rpc": "http://localhost:23119/better-bibtex/json-rpc",
+  "poll_seconds": 5,
+  "state_file": "~/.llm_wiki_sync_state.json"
+}
