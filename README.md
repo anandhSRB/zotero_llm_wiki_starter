@@ -5,7 +5,7 @@ with you, built so that **every claim traces back to a source you
 actually have**.
 
 Field-agnostic: the structure comes from your library, not from this kit.
-It works the same for medicine, law, materials science, machine learning
+It works the same for fluid dynamics, machine learning, medicine
 or anything else.
 
 ```
