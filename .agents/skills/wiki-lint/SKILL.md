@@ -9,7 +9,13 @@ description: Run the read-only integrity check over the vault and report what it
 python3 scripts/wiki_lint.py            # report
 python3 scripts/wiki_lint.py --json     # machine-readable
 python3 scripts/wiki_lint.py --quiet    # problems only
+python3 scripts/wiki_lint.py --ignore-orphans   # do not fail on orphans
 ```
+
+`--ignore-orphans` still *reports* the orphan count but keeps it out of the
+exit code. It exists for pre-commit hooks and CI, where unprocessed
+material is the normal state and only real breakage should block. Do not
+use it to make a report look clean.
 
 Read-only and stdlib-only; safe to run as often as you like. Exit 0 means
 no problems.

@@ -153,9 +153,10 @@ def lint():
 
     orphaned = sorted(source_citekeys - set(cited_by))
     if orphaned:
-        problems.append(
-            f"ORPHANED (not cited by any topic page): {len(orphaned)}"
-        )
+        # Tracked apart from the rest so --ignore-orphans can spare it: an
+        # unprocessed source is a to-do, not a broken vault.
+        orphan_problem = f"ORPHANED (not cited by any topic page): {len(orphaned)}"
+        problems.append(orphan_problem)
 
     multi_homed = {k: sorted(v) for k, v in cited_by.items() if len(v) > 1}
 
@@ -270,6 +271,10 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--json", action="store_true", help="emit the report as JSON")
     ap.add_argument("--quiet", action="store_true", help="problems only, no progress block")
+    ap.add_argument("--ignore-orphans", action="store_true",
+                    help="still report orphans, but do not fail on them -- for a "
+                         "pre-commit hook, where unprocessed material is normal "
+                         "and only real breakage should block a commit")
     args = ap.parse_args()
 
     if not SOURCES_DIR.exists() or not TOPICS_DIR.exists():
@@ -277,6 +282,8 @@ def main():
         return 1
 
     r = lint()
+    if args.ignore_orphans:
+        r["problems"] = [p for p in r["problems"] if not p.startswith("ORPHANED")]
     if args.json:
         print(json.dumps(r, indent=2))
         return 1 if r["problems"] else 0
@@ -304,7 +311,11 @@ def main():
         print()
 
     if not r["problems"]:
-        print("No problems found.")
+        if args.ignore_orphans and r["orphaned"]:
+            print(f"No problems found ({len(r['orphaned'])} orphaned source(s) "
+                  f"not counted: --ignore-orphans).")
+        else:
+            print("No problems found.")
         return 0
 
     print(f"{len(r['problems'])} problem(s):")

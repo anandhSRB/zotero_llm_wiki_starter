@@ -228,6 +228,7 @@ In [`AGENTS.md`](AGENTS.md), and worth knowing:
 |---|---|
 | `wiki_lint.py` | integrity check + progress. Ground truth. Read-only. |
 | `wiki_lint.py --json` | the same, machine-readable |
+| `wiki_lint.py --ignore-orphans` | report orphans but do not fail on them — for hooks and CI |
 | `wiki_digest.py` | skimmable digest of `sources/` — the clustering pass |
 | `wiki_digest.py --orphaned` | only unprocessed sources |
 | `wiki_digest.py --topic SLUG` | the sources behind one topic page, and which are still unread — the resume call |
@@ -268,8 +269,14 @@ repo gets the library's metadata without the PDFs.
 A useful pre-commit hook:
 
 ```bash
-python3 scripts/wiki_lint.py --quiet && python3 scripts/sync_skill_pointers.py --check
+python3 scripts/wiki_lint.py --quiet --ignore-orphans && python3 scripts/sync_skill_pointers.py --check
 ```
+
+`--ignore-orphans` matters here: a plain `wiki_lint.py` exits non-zero
+while any source is still unprocessed, which is the *normal* state, so a
+hook without the flag would block almost every commit. With it, only real
+breakage — a broken link, a dangling `parent`, a malformed page — stops a
+commit, and the orphan count is still printed.
 
 ## Credits
 
