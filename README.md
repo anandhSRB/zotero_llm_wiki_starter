@@ -18,6 +18,13 @@ of your reference manager — regenerate it any time. `topics/` is the part
 with value in it, and it is auditable: if a sentence has no `[[citekey]]`,
 it does not belong.
 
+![Obsidian graph view of a vault built with this kit](docs/vault-graph.webp)
+
+*A working vault in Obsidian's graph view: ~380 sources (the small nodes)
+pulled into 41 topic pages (the hubs), each hub a page whose every claim
+cites the sources hanging off it. The clusters are not imposed by the kit
+— they are what the library turned out to contain.*
+
 ## Why two layers
 
 Pointing an agent at 400 PDFs and asking a question gets you a plausible
@@ -243,6 +250,7 @@ only to `sources/`.
 
 ```
 LICENSE                MIT
+docs/                  images used by this README
 AGENTS.md              the contract — agent-agnostic, read this first
 CLAUDE.md              thin entry point pointing at AGENTS.md
 sources/               RAW layer (machine-written; PDFs gitignored)
