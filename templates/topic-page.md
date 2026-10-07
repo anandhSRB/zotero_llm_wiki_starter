@@ -32,5 +32,9 @@ If a source's abstract does not actually support a claim, write
 question." Only real relationships -- do not pad.>
 
 ## Sources
-- [[citekey]]
-- [[another-citekey]]
+<!-- Annotate each source the moment you have dealt with it, so an
+     interrupted deep read can resume. Unannotated = not yet examined.
+     See AGENTS.md -> Checkpointing. -->
+- [[citekey]] — deep read YYYY-MM-DD
+- [[another-citekey]] — abstract only (no PDF)
+- [[a-third-citekey]]

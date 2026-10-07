@@ -102,18 +102,40 @@ that did not cluster last time may cluster with today's arrivals.**
 Fix any genuine *problem* the lint reports before adding material. If the
 problem is in `sources/`, flag it and stop (rule 1).
 
-### 5. Read each source
+### 5. Read each source — one at a time, writing as you go
 
 Frontmatter, `## Abstract`, `## Notes`, and the embedded PDF where
 `has_pdf` is true. Where it is false, work from the abstract and **say on
 the page that it is abstract-only** rather than inferring detail.
 
+**Write each source's findings to its page before opening the next one**,
+and mark it in that page's `## Sources`:
+
+```markdown
+- [[citekey]] — deep read 2026-10-07
+- [[citekey]] — abstract only (no PDF)
+```
+
+See `AGENTS.md` → **Checkpointing**. A deep read held only in context is
+lost when the session ends; one written down is not. Resume an interrupted
+run with:
+
+```bash
+python3 scripts/wiki_digest.py --topic <slug> --chars 0
+```
+
+which prints exactly which sources on that page are still unexamined.
+
 ### 6. Decide, per source
 
 **(a) Fits an existing topic.** Integrate its findings into
 `## What the literature says` alongside what is there — **never rewrite
-the page** (rule 2). Add its `[[citekey]]` to `## Sources`, set
-`last_updated`. Remove it from `uncategorized.md` once integrated.
+the page** (rule 2). Add its `[[citekey]]` to `## Sources` **with a read
+marker**, set `last_updated`, and write all of that before moving to the
+next source. Remove it from `uncategorized.md` once integrated.
+
+If the page was `drafted` or `linked`, it stays so — adding a marked
+source does not demote it. Only a page with *unmarked* sources is `stub`.
 
 If it *disagrees* with what the page says, keep both and attribute each
 side. A newer paper is not automatically right.

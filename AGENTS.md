@@ -194,6 +194,82 @@ Use `has_pdf` in the source frontmatter to know whether a deep read is
 even possible. When it is not, say so on the page rather than inferring
 from the abstract.
 
+## Checkpointing: write each source's findings before reading the next
+
+**A deep read that is not written down is lost.** Your context can end at
+any point — token budget, an interrupted session, a crash — and anything
+held only in context goes with it. So the unit of work is **one source**,
+not one page:
+
+> Read one source → write its findings onto the page → mark it in
+> `## Sources` → only then open the next source.
+
+Never read five PDFs and write them up together. Reading twelve sources
+and writing nothing risks losing twelve reads; reading one and writing it
+loses at most one.
+
+### Mark each source as you go
+
+In the page's `## Sources` list, annotate each entry the moment you have
+dealt with it:
+
+```markdown
+## Sources
+- [[citekeyA]] — deep read 2026-10-07
+- [[citekeyB]] — abstract only (no PDF)
+- [[citekeyC]] — abstract only (PDF unreadable: scanned, no text layer)
+- [[citekeyD]]
+```
+
+An unannotated entry means **not yet examined**. That makes resuming
+mechanical rather than guesswork:
+
+```bash
+python3 scripts/wiki_digest.py --topic <slug> --chars 0
+```
+
+prints a `RESUME HERE` list of exactly the sources still unexamined. Start
+any deep-read session with that call, and never re-read a source already
+marked `deep read`.
+
+These markers also serve the reader: "abstract only" is the visible
+warning that a claim rests on an abstract, which rule 5 requires you to be
+honest about.
+
+### A page is `drafted` only when every source is marked
+
+While sources remain unannotated the page stays `status: stub`, even if it
+already has substantial prose. Promote it to `drafted` only once the
+`## Sources` list is fully annotated. The two fields answer different
+questions: `status` tracks the page, the markers track progress within it.
+
+**One exception, for pages written before this convention existed.** A page
+already marked `drafted` or `linked` whose sources carry *no* markers at
+all predates the convention — its sources were read, the page's own prose
+is the evidence, and the markers simply were not a thing yet. **Do not
+demote such a page to `stub`, and do not re-read its sources wholesale.**
+`wiki_digest.py --topic <slug>` detects this case and says so instead of
+printing a resume list. Add markers opportunistically when you next touch
+one of those sources for another reason; a bulk backfill would be guessing
+about which were read deeply versus from the abstract, and guessing is
+exactly what rule 5 forbids.
+
+### Incremental writing vs organising by claim
+
+Writing source-by-source pulls toward a paper-by-paper page, which
+`## What the literature says` must not be. Resolve it in two passes:
+
+1. **As you read**, put each source's findings under the themed lead-in
+   they belong to, creating a new theme when none fits. Order will be
+   imperfect; that is fine — it is on disk and safe.
+2. **Once every source is marked**, do one consolidation pass: merge
+   near-duplicate themes, resolve redundant restatement, and put the
+   themes in a sensible order. This is cheap, because the material is
+   already on the page and needs no re-reading.
+
+Never defer pass 1 to keep pass 2 tidy. A rough written page beats a
+perfect unwritten one.
+
 ## Before finishing any task that touched `topics/`
 
 1. Run `python3 scripts/wiki_lint.py` and report everything it flags.

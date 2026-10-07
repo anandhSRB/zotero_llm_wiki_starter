@@ -207,23 +207,45 @@ knows what was already considered. Do not invent a topic to absorb them.
 
 ## Phase 3 — Deep read and fill
 
-Now the expensive part. Work **one topic page at a time**, so progress
-survives an interrupted session.
+Now the expensive part, and the one most likely to be cut short. Read
+`AGENTS.md` → **Checkpointing** before starting; this phase is where it
+matters most.
 
-For each page with `status: stub`:
+Work **one topic page at a time**, and within a page **one source at a
+time**. Start every session — including a resumed one — with:
 
 ```bash
 python3 scripts/wiki_digest.py --topic <slug> --chars 0
 ```
 
-That lists its sources and flags which have a PDF. Then read the actual
-PDFs embedded in those source notes — and for sources flagged `-` for
-PDF, work from the abstract and **say on the page that it is
-abstract-only**.
+It lists the page's sources, flags which have a PDF, and prints a
+`RESUME HERE` list of those not yet examined. Never re-read a source
+already marked `deep read`.
 
-Write `## What the literature says` organised **by claim, not by paper**:
-a bolded lead-in per theme, then what the sources say about it. One
-paragraph per paper is a reading list, not synthesis.
+### The loop, per source
+
+1. Read it: the embedded PDF where `has_pdf` is true. Where it is false,
+   work from the abstract and **say on the page that it is
+   abstract-only** — do not inflate an abstract into a finding.
+2. **Write its findings onto the page immediately**, under the themed
+   lead-in they belong to (create a new theme if none fits).
+3. **Mark it** in `## Sources`: `- [[citekey]] — deep read <today>`, or
+   `— abstract only (no PDF)`.
+4. Bump `last_updated`. Only now open the next source.
+
+**Do not batch.** Reading eight PDFs and writing them up together means
+an interruption costs eight reads; this loop costs at most one. A roughly
+organised page that exists beats a well-organised one that does not.
+
+### When every source on the page is marked
+
+Do one consolidation pass — merge near-duplicate themes, remove redundant
+restatement, order the themes sensibly — so the section reads **by claim,
+not by paper**. One paragraph per paper is a reading list, not synthesis.
+This pass needs no re-reading, because everything is already on the page.
+
+Then set `status: drafted`. A page with any unmarked source stays `stub`,
+however much prose it has.
 
 While reading, actively look for:
 - **disagreement between sources** — surface it and attribute each side;
@@ -236,8 +258,7 @@ While reading, actively look for:
 - **anything you cannot support** — write "needs a closer read" and name
   the source. Never fill a gap by inference (rule 5).
 
-Then set `status: drafted`, bump `last_updated`, and move to the next
-page. Re-run the lint every few pages to catch a broken link early.
+Re-run the lint every few pages to catch a broken link early.
 
 ---
 
