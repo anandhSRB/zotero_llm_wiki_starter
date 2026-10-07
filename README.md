@@ -242,6 +242,7 @@ only to `sources/`.
 ## Layout
 
 ```
+LICENSE                MIT
 AGENTS.md              the contract — agent-agnostic, read this first
 CLAUDE.md              thin entry point pointing at AGENTS.md
 sources/               RAW layer (machine-written; PDFs gitignored)
@@ -277,6 +278,17 @@ while any source is still unprocessed, which is the *normal* state, so a
 hook without the flag would block almost every commit. With it, only real
 breakage — a broken link, a dangling `parent`, a malformed page — stops a
 commit, and the orphan count is still printed.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Use it, change it, share it; keep the
+copyright notice.
+
+This covers the kit itself: the scripts, skills, templates and docs. It
+says nothing about **your** vault's contents — your notes are yours, and
+the papers under `sources/` are the publishers'. Those PDFs are gitignored
+for exactly that reason, so sharing a vault shares its metadata and your
+synthesis, not copies of the literature.
 
 ## Credits
 
