@@ -91,10 +91,73 @@ It will, in order:
 2. **skim** the sources (abstracts only, no PDFs) and propose concise
    topics, then wait for your approval,
 3. create the approved pages, then **deep-read** the PDFs to fill them,
+   writing each source's findings down before opening the next one,
 4. **cross-link** topics and place sources that belong in more than one.
 
 The gates are deliberate. Approving a topic list takes a minute; undoing
 a structure built on a wrong guess takes an afternoon.
+
+### If the agent stops midway
+
+**Expect this on a real library.** Step 3's deep-read phase is the long
+part — hundreds of PDFs — and an agent will usually hit its context or
+token limit before finishing. That is normal, not a failure, and the build
+is designed to survive it.
+
+**What is protected.** The agent writes each source's findings to the page
+and marks that source *before* opening the next one. So an interruption
+costs at most the one source in flight — never the twelve already read.
+Everything else is on disk.
+
+**How to resume.** Start a fresh session and say:
+
+> Read AGENTS.md, then continue the wiki-bootstrap deep read.
+
+(Or `...continue the wiki-update`, if that is what was interrupted.)
+
+It does not need the old conversation. Both levels of progress are stored
+in the files themselves:
+
+- **Which pages are done** — each page's `status`: `stub` → `drafted` →
+  `linked`. Obsidian's *Needs filling* and *Needs linking* views in
+  `topics/_index.base` list them directly.
+- **Which sources within a page are done** — annotations in that page's
+  `## Sources`:
+
+```markdown
+- [[citekeyA]] — deep read 2026-10-07
+- [[citekeyB]] — abstract only (no PDF)
+- [[citekeyC]]                              ← not read yet
+```
+
+**To see exactly where it stopped** — this works for you as well as the
+agent:
+
+```bash
+python3 scripts/wiki_lint.py                            # how many pages at each status
+grep -l 'status: stub' topics/*.md                      # which pages still need filling
+python3 scripts/wiki_digest.py --topic <slug> --chars 0  # which sources in one page remain
+```
+
+The lint gives counts (`by status {stub: 7, drafted: 2, linked: 12}`); the
+`grep` names the pages; the digest prints a `RESUME HERE` list of the
+sources on one page not yet examined. A source already marked `deep read`
+is never read twice, so resuming costs nothing extra.
+
+**This is not only about the first build.** `wiki-update` follows the same
+discipline, so an interrupted update resumes the same way. And if the stop
+happens during step 3's *skim* phase, before any page exists, just re-run
+it — nothing has been written yet, and a skim is cheap.
+
+**Doing it in deliberate chunks** is fine, and often better than one long
+run — "deep-read the next three topic pages, then stop" keeps each session
+well inside its limits. The build is not one atomic operation.
+
+**One caveat for an existing vault.** Pages written before this convention
+have no markers. A page already `drafted` or `linked` with no markers at
+all is treated as **predating the convention, not unread** — the tooling
+says so explicitly rather than printing a resume list, so a migrated vault
+is never re-read from scratch.
 
 ### 4. Afterwards
 
@@ -127,7 +190,9 @@ Three tiers, set by the `tags` field:
 | `topic` | a leaf — **the actual content** | yes | yes |
 
 Each topic page carries a `status`, so an interrupted build is resumable
-and you can see at a glance what is left:
+at page level, and the read markers in `## Sources` make it resumable
+*within* a page too (see [If the agent stops
+midway](#if-the-agent-stops-midway)):
 
 `stub` (created from a skim) → `drafted` (filled from a deep read) →
 `linked` (cross-linked, multi-homing resolved)
@@ -165,7 +230,7 @@ In [`AGENTS.md`](AGENTS.md), and worth knowing:
 | `wiki_lint.py --json` | the same, machine-readable |
 | `wiki_digest.py` | skimmable digest of `sources/` — the clustering pass |
 | `wiki_digest.py --orphaned` | only unprocessed sources |
-| `wiki_digest.py --topic SLUG` | the sources behind one topic page |
+| `wiki_digest.py --topic SLUG` | the sources behind one topic page, and which are still unread — the resume call |
 | `zotero_sync.py --once` | one Zotero sync pass (`--rebuild` to rewrite all) |
 | `new_source.py` | add a source by hand (`--adopt` for loose PDFs) |
 | `sync_skill_pointers.py` | refresh per-agent skill pointers (`--check` for CI) |
