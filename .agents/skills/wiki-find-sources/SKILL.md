@@ -47,7 +47,7 @@ python3 scripts/wiki_digest.py --topic <slug> --chars 0
 
 Use whichever literature search tools this agent has — a research-database
 tool, a scholarly index, or a database the user names. Prefer a scholarly
-index over general web search.
+index (eg. Concensus or PubMed and such) over general web search.
 
 - Run **several differently-phrased queries** rather than one. Recall
   matters more than precision here, because the user filters afterwards.
