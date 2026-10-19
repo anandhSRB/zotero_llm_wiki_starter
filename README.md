@@ -50,8 +50,15 @@ intermediate layer** first. Afterwards:
 
 ### 1. Get the files
 
-Copy this folder to wherever you keep the vault, then open it in
-Obsidian ("Open folder as vault") and in your agent.
+**Use this as a template, not as a dependency.** On GitHub press
+**Use this template** → *Create a new repository*; or just download and
+unzip it. Either way you get your own repo with its own history. Your
+vault is yours from the first commit — there is no upstream to merge
+against, which matters because Obsidian rewrites some of these files the
+moment you open them (see [Updating](#updating)).
+
+Then open the folder in Obsidian ("Open folder as vault") and in your
+agent.
 
 ```bash
 cd llm-wiki-starter
@@ -225,7 +232,9 @@ In [`AGENTS.md`](AGENTS.md), and worth knowing:
 3. **New topics are proposed, not created.** You approve names.
 4. **The lint is ground truth** for what needs attention.
 5. **Every claim carries a `[[citekey]]`.** No source support → "needs a
-   closer read", not a guess.
+   closer read", not a guess. **The lint checks this**: it flags any
+   paragraph in a topic page's findings sections that cites no source, so
+   the project's central promise is verified rather than merely asserted.
 6. **The agent never adds to your reference manager.** External finds go
    to `candidate-sources.md` for you to review.
 
@@ -236,6 +245,7 @@ In [`AGENTS.md`](AGENTS.md), and worth knowing:
 | `wiki_lint.py` | integrity check + progress. Ground truth. Read-only. |
 | `wiki_lint.py --json` | the same, machine-readable |
 | `wiki_lint.py --ignore-orphans` | report orphans but do not fail on them — for hooks and CI |
+| `wiki_lint.py --strict-citations` | fail on claim blocks that cite no source |
 | `wiki_digest.py` | skimmable digest of `sources/` — the clustering pass |
 | `wiki_digest.py --orphaned` | only unprocessed sources |
 | `wiki_digest.py --topic SLUG` | the sources behind one topic page, and which are still unread — the resume call |
@@ -253,7 +263,7 @@ LICENSE                MIT
 docs/                  images used by this README
 AGENTS.md              the contract — agent-agnostic, read this first
 CLAUDE.md              thin entry point pointing at AGENTS.md
-sources/               RAW layer (machine-written; PDFs gitignored)
+sources/               RAW layer — yours (machine-written; PDFs gitignored)
 topics/                WIKI layer (agent-written, human-edited)
   uncategorized.md     staging: unclustered sources + pending proposals
 templates/             frontmatter contracts, with notes on each tier
@@ -263,6 +273,42 @@ scripts/               stdlib-only tooling
 .claude/skills/        generated pointers to the above
 wiki.config.example.json  copy to wiki.config.json (gitignored) if using Zotero
 ```
+
+## Updating
+
+Once you have filled `sources/` and `topics/`, the repo is **your vault**,
+not a checkout of this one. There is no `git pull` story, by design — your
+notes and the kit's tooling have nothing to do with each other.
+
+The split is clean:
+
+| | | |
+|---|---|---|
+| `scripts/` | tooling | **safe to overwrite** from upstream |
+| `.agents/skills/` | tooling | **safe to overwrite** from upstream |
+| `templates/`, `AGENTS.md`, `CLAUDE.md` | tooling you then adapt | overwrite, then re-apply your edits (your domain list lives in `AGENTS.md`) |
+| `sources/`, `topics/`, `candidate-sources.md` | **yours** | never overwrite |
+| `*_index.base`, `.obsidian/` | **yours** | never overwrite — Obsidian rewrites these as you use it |
+
+So to pick up a later improvement:
+
+```bash
+git clone --depth 1 <this repo> /tmp/kit
+cp -r /tmp/kit/scripts /tmp/kit/.agents ./
+python3 scripts/sync_skill_pointers.py    # refresh .claude/skills
+python3 scripts/wiki_lint.py              # confirm nothing broke
+```
+
+Commit that as one "update tooling" commit and you can see exactly what
+changed. If you have edited a skill yourself, diff before copying — the
+canonical skills are plain Markdown, so a three-way merge by eye is easy.
+
+**Why the `.base` files are yours.** `topics/_index.base` and
+`sources/_index.base` are Obsidian Bases *view definitions*. The moment
+you open the vault, Obsidian normalises them and strips comments, and
+every change you make through its Filters UI is written back. They ship as
+useful defaults and then belong to you; nothing in this kit overwrites
+them after the first run.
 
 ## Using git (optional)
 

@@ -50,6 +50,25 @@ STAGING_FILES = ("uncategorized.md", "candidate-sources.md")
 #   linked  -- cross-linked to sibling topics, multi-homing resolved
 TOPIC_STATUSES = ("stub", "drafted", "linked")
 
+# Sections of a `topic` page whose prose must cite its sources. These are
+# the sections that state what the literature found; Overview frames and
+# Cross-links relate, so neither is required to carry a citation.
+# Checked by wiki_lint.py -- see uncited_blocks().
+CITED_SECTIONS = (
+    "What the literature says",
+    "Open questions / gaps",
+)
+
+# A prose block shorter than this is not treated as a claim: it is a
+# bolded lead-in, a transition, or a placeholder.
+#
+# Tuned against a real 32-page, 378-source vault: between 8 and 25 words
+# the flag count there was identical (2 blocks), so the threshold is not
+# what controls noise on well-cited prose -- the citekey test is. 10 is
+# therefore set low enough to catch a short invented claim while still
+# skipping a bolded lead-in like "**Motivation.**".
+MIN_CLAIM_WORDS = 10
+
 DEFAULTS = {
     # Only used by scripts/zotero_sync.py. Leave null if you add
     # sources by hand (see scripts/new_source.py).

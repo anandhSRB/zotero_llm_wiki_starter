@@ -27,6 +27,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from wiki_config import (  # noqa: E402
+    CITED_SECTIONS,
+    MIN_CLAIM_WORDS,
     SOURCES_DIR,
     STAGING_FILES,
     TOPIC_STATUSES,
@@ -60,6 +62,70 @@ def build_indices():
     return notes, all_files
 
 
+def uncited_blocks(text, source_citekeys):
+    """Prose blocks in a topic page's claim sections that cite no source.
+
+    This is the one check that tests the vault's central promise -- that
+    every claim traces to a source -- rather than its structure. It is
+    deliberately conservative, because a noisy version would just get
+    switched off:
+
+      * only `topic` pages, and only the sections that state findings;
+      * a block is blank-line-separated prose, so a contiguous bullet
+        list counts as one block;
+      * blocks under MIN_CLAIM_WORDS are skipped as lead-ins or
+        transitions;
+      * headings, fenced code, blockquotes and HTML comments are ignored;
+      * a link only counts if it resolves to a real citekey in sources/,
+        so [[another-topic]] does not launder an uncited claim.
+
+    It cannot know that a sentence continues the citation of the one
+    before it, so it is reported as a warning. `--strict-citations`
+    promotes it for CI.
+    """
+    flagged = []
+    section, in_fence = None, False
+    block = []
+
+    def flush():
+        if not block or not section:
+            return
+        body = "\n".join(block)
+        words = len(body.split())
+        if words < MIN_CLAIM_WORDS:
+            return
+        cites = WIKILINK_RE.findall(body)
+        if any(c.strip() in source_citekeys for c in cites):
+            return
+        first = " ".join(body.split())[:70]
+        flagged.append((section, first))
+
+    for raw in text.splitlines():
+        line = raw.rstrip()
+        if line.lstrip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if line.startswith("#"):
+            flush()
+            block = []
+            m = re.match(r"^#{2,}\s+(.*?)\s*$", line)
+            heading = m.group(1) if m else ""
+            section = heading if heading in CITED_SECTIONS else None
+            continue
+        if not line.strip():
+            flush()
+            block = []
+            continue
+        stripped = line.lstrip()
+        if stripped.startswith((">", "<!--")):
+            continue
+        block.append(line)
+    flush()
+    return flagged
+
+
 def check_base_files(problems):
     """Validate Obsidian .base view definitions, if PyYAML is available."""
     bases = list(VAULT_ROOT.rglob("*.base"))
@@ -82,6 +148,7 @@ def lint():
     # between machines without its PDFs, every source reports the same two
     # problems and buries everything else. See summarise_pdf_issues().
     pdf_issues = []
+    uncited = []
     notes, all_files = build_indices()
 
     # Obsidian resolves [[x]] ambiguously when two notes share a stem.
@@ -147,6 +214,13 @@ def lint():
         elif in_topics and md.name not in STAGING_FILES:
             _check_topic(rel, md, fm, topic_stems, problems, warnings,
                          status_counts, tag_counts)
+            tags = fm.get("tags") or []
+            if isinstance(tags, str):
+                tags = [tags]
+            # Only leaves hold synthesis; domain and hub pages are maps.
+            if "topic" in tags:
+                for sect, excerpt in uncited_blocks(text, source_citekeys):
+                    uncited.append(f"{rel} [{sect}] -- {excerpt}...")
 
     check_base_files(problems)
     problems.extend(summarise_pdf_issues(pdf_issues, len(source_citekeys)))
@@ -173,6 +247,7 @@ def lint():
             "by_status": dict(status_counts),
         },
         "multi_homed": multi_homed,
+        "uncited": uncited,
     }
 
 
@@ -271,6 +346,8 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--json", action="store_true", help="emit the report as JSON")
     ap.add_argument("--quiet", action="store_true", help="problems only, no progress block")
+    ap.add_argument("--strict-citations", action="store_true",
+                    help="treat uncited claim blocks as problems, not warnings")
     ap.add_argument("--ignore-orphans", action="store_true",
                     help="still report orphans, but do not fail on them -- for a "
                          "pre-commit hook, where unprocessed material is normal "
@@ -282,6 +359,10 @@ def main():
         return 1
 
     r = lint()
+    if r["uncited"]:
+        bucket = "problems" if args.strict_citations else "warnings"
+        label = "UNCITED CLAIM" if args.strict_citations else "uncited claim block"
+        r[bucket].extend(f"{label}: {u}" for u in r["uncited"])
     if args.ignore_orphans:
         r["problems"] = [p for p in r["problems"] if not p.startswith("ORPHANED")]
     if args.json:
@@ -296,6 +377,9 @@ def main():
               f"by tag {dict(sorted(c['by_tag'].items()))}  "
               f"by status {dict(sorted(c['by_status'].items()))}")
         print(f"  sources placed in >1 topic: {c['multi_homed_sources']}")
+        if r["uncited"]:
+            print(f"  claim blocks with NO citation: {len(r['uncited'])}"
+                  f"  <- the one rule the vault rests on")
         if r["orphaned"]:
             shown = ", ".join(r["orphaned"][:15])
             more = f" ... (+{len(r['orphaned']) - 15} more)" if len(r["orphaned"]) > 15 else ""

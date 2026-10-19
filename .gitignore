@@ -25,3 +25,9 @@ sources/*.pdf
 # Python
 __pycache__/
 *.py[cod]
+
+# Obsidian settings beyond the plugin defaults are each user's own.
+.obsidian/app.json
+.obsidian/appearance.json
+.obsidian/graph.json
+.obsidian/hotkeys.json

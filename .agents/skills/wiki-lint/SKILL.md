@@ -10,6 +10,7 @@ python3 scripts/wiki_lint.py            # report
 python3 scripts/wiki_lint.py --json     # machine-readable
 python3 scripts/wiki_lint.py --quiet    # problems only
 python3 scripts/wiki_lint.py --ignore-orphans   # do not fail on orphans
+python3 scripts/wiki_lint.py --strict-citations # uncited claims become problems
 ```
 
 `--ignore-orphans` still *reports* the orphan count but keeps it out of the
@@ -77,6 +78,21 @@ names, and stop (rule 1).
 **DUPLICATE NAME** — two notes share a stem, so `[[stem]]` resolves
 ambiguously. Usually a topic page accidentally named after a citekey.
 Rename the *topic* page, never the source, and update every link to it.
+
+**uncited claim block** — a paragraph in a `topic` page's
+`## What the literature says` or `## Open questions / gaps` that cites no
+source. This is the check for rule 5, the rule the whole vault rests on.
+Reported as a warning because it cannot tell that a sentence continues
+the previous one's citation; `--strict-citations` promotes it to a
+problem for CI.
+
+Treat each one as a question, not an automatic defect. Usually it is one
+of: a genuine uncited claim (add the `[[citekey]]`, or delete the
+sentence if no source supports it); an author named in prose rather than
+linked (`Smith et al. found…` → `[[smithSomething2020]]`); or an
+editorial aside that is not a claim about the literature (fine to leave).
+**Never silence one by adding a citation that does not actually support
+the sentence** — that is the exact failure the check exists to catch.
 
 **ORPHANED** — sources no topic page cites: unprocessed material, not a
 defect. Hand off to `wiki-update`, or just list them if the user asked

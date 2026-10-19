@@ -52,6 +52,12 @@ file.
    write "needs a closer read" and name the source instead of guessing.
    A gap you admit is worth more than a claim you invent.
 
+   **This rule is checked.** `wiki_lint.py` flags any prose block in a
+   `topic` page's `## What the literature says` or `## Open questions /
+   gaps` that cites no source. A link to another *topic* does not count —
+   only a real citekey from `sources/`. Naming an author in prose
+   ("Smith et al. found…") does not count either; use `[[citekey]]`.
+
 6. **Never add anything to the reference manager, and never write into
    `sources/`.** Literature selection is a human decision. Papers found
    through external search go in `candidate-sources.md` for review. Your
