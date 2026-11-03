@@ -183,13 +183,14 @@ When new sources arrive, ask the agent to run **wiki-update**. The lint's
 ORPHANED list is the queue of unprocessed material, so you never have to
 track what has been read.
 
-The five skills:
+The six skills:
 
 | Skill | Use when |
 |---|---|
 | `wiki-bootstrap` | first build — the four gated phases above |
 | `wiki-update` | new sources appeared; fold them in |
 | `wiki-restructure` | a page outgrew itself, or two pages overlap |
+| `wiki-verify` | audit a page's claims against its sources before you rely on it |
 | `wiki-lint` | check integrity (reports; fixes only if you ask) |
 | `wiki-find-sources` | look for literature you do not have yet |
 
@@ -235,6 +236,10 @@ In [`AGENTS.md`](AGENTS.md), and worth knowing:
    closer read", not a guess. **The lint checks this**: it flags any
    paragraph in a topic page's findings sections that cites no source, so
    the project's central promise is verified rather than merely asserted.
+6. **A citation is the floor, not the ceiling.** It proves a sentence has
+   a source, not that the source supports it. `AGENTS.md` → *Claim
+   fidelity* names the five ways a well-cited claim still goes wrong, and
+   `wiki-verify` audits for them.
 6. **The agent never adds to your reference manager.** External finds go
    to `candidate-sources.md` for you to review.
 
@@ -246,6 +251,8 @@ In [`AGENTS.md`](AGENTS.md), and worth knowing:
 | `wiki_lint.py --json` | the same, machine-readable |
 | `wiki_lint.py --ignore-orphans` | report orphans but do not fail on them — for hooks and CI |
 | `wiki_lint.py --strict-citations` | fail on claim blocks that cite no source |
+| `wiki_audit.py --top 25` | rank existing claims by risk — the retrofit worklist |
+| `wiki_audit.py --topic SLUG` | rank every claim on one page before relying on it |
 | `wiki_digest.py` | skimmable digest of `sources/` — the clustering pass |
 | `wiki_digest.py --orphaned` | only unprocessed sources |
 | `wiki_digest.py --topic SLUG` | the sources behind one topic page, and which are still unread — the resume call |
@@ -302,6 +309,33 @@ python3 scripts/wiki_lint.py              # confirm nothing broke
 Commit that as one "update tooling" commit and you can see exactly what
 changed. If you have edited a skill yourself, diff before copying — the
 canonical skills are plain Markdown, so a three-way merge by eye is easy.
+
+### Adopting a new rule in an existing wiki
+
+Copying the tooling is the easy half. When an update adds a *rule* —
+as claim fidelity did — pages already written do not retroactively
+follow it. Three steps, in this order:
+
+1. **Merge `AGENTS.md` by hand.** It holds both the kit's rules and
+   *your* domain list, so it is the one file you cannot simply
+   overwrite. Diff it, take the new sections, keep your domains.
+2. **Let the rule govern new work immediately.** It applies the moment
+   the skills are in place, at no extra cost. This is most of the
+   benefit.
+3. **Retrofit by priority, never wholesale.**
+
+```bash
+python3 scripts/wiki_audit.py --top 25
+```
+
+ranks existing claims by how likely they are to be wrong, so you audit
+tens of blocks rather than hundreds. Then work the list with
+`wiki-verify`, and let the rest ride along: every time `wiki-update`
+touches a page, its existing claims get verified too.
+
+Expect this to be the normal shape of adopting any future rule — new
+work complies at once, old work is triaged, and the backlog shrinks as a
+side effect of ordinary editing.
 
 **Why the `.base` files are yours.** `topics/_index.base` and
 `sources/_index.base` are Obsidian Bases *view definitions*. The moment

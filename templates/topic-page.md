@@ -14,6 +14,18 @@ together. Cite as you go: [[citekey]].>
 <The substance. Organise by **claim**, not by paper -- one bolded lead-in
 per theme, then what the sources say about it.
 
+Carry each claim's conditions with it, and anchor load-bearing figures:
+
+  **Radiator downsizing.** Frontal area fell 27% at 0.05 vol% ZnO against
+  a 50/50 water-EG baseline, on a 2.4 kW automotive stack ("27% reduction
+  in frontal area", Table 4) [[citekey]]. The paper's abstract instead
+  headlines 27% at 0.5 vol%, which its own table does not support.
+
+Note what that does: the number keeps its operating point, the scale is
+marked because it differs from this page's subject, the quote makes it
+greppable, and the source's internal disagreement is recorded rather than
+silently resolved. See AGENTS.md -> Claim fidelity.
+
 Every factual sentence carries at least one [[citekey]]. Where sources
 disagree, say so explicitly and attribute each side; a disagreement you
 surface is more useful than a consensus you manufacture.

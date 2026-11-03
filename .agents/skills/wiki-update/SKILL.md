@@ -108,6 +108,11 @@ Frontmatter, `## Abstract`, `## Notes`, and the embedded PDF where
 `has_pdf` is true. Where it is false, work from the abstract and **say on
 the page that it is abstract-only** rather than inferring detail.
 
+Apply the `AGENTS.md` → **Claim fidelity** checks to every claim you
+write: did this paper *produce* the finding; are its conditions attached;
+is the scope marked; is the hedge intact; do abstract and body agree.
+Anchor load-bearing figures with a verbatim fragment and a locator.
+
 **Write each source's findings to its page before opening the next one**,
 and mark it in that page's `## Sources`:
 

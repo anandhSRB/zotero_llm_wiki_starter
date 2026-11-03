@@ -7,6 +7,7 @@ else points at them.
 |---|---|
 | `wiki-bootstrap` | `topics/` is empty and `sources/` has content — the gated first build |
 | `wiki-update` | new sources appeared; fold them into an existing structure |
+| `wiki-verify` | audit a page's claims against the sources they cite |
 | `wiki-lint` | check integrity and act on what the lint reports |
 | `wiki-find-sources` | look for literature not yet in the library |
 

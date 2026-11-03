@@ -228,7 +228,20 @@ already marked `deep read`.
    work from the abstract and **say on the page that it is
    abstract-only** — do not inflate an abstract into a finding.
 2. **Write its findings onto the page immediately**, under the themed
-   lead-in they belong to (create a new theme if none fits).
+   lead-in they belong to (create a new theme if none fits). Before
+   writing each claim, run the `AGENTS.md` → **Claim fidelity** checks:
+
+   - did **this** paper produce the finding, or is it relaying someone
+     else's? (attribution drift — the most common error)
+   - are the **conditions** attached — concentration, temperature, scale,
+     population, load case?
+   - is the **scope** the page's scope, or does it need marking?
+   - have you kept the source's **hedge** — "suggests" is not "shows"?
+   - does the abstract agree with the body? If not, **say so on the
+     page**; prefer the body.
+
+   Anchor any load-bearing figure with a short verbatim fragment and a
+   locator, so it can be re-checked by grep rather than by re-reading.
 3. **Mark it** in `## Sources`: `- [[citekey]] — deep read <today>`, or
    `— abstract only (no PDF)`.
 4. Bump `last_updated`. Only now open the next source.
@@ -248,6 +261,10 @@ Then set `status: drafted`. A page with any unmarked source stays `stub`,
 however much prose it has.
 
 While reading, actively look for:
+
+- **the paper disagreeing with itself** — an abstract headline that its
+  own results table does not support. Record it; that is a finding about
+  the source, worth more than either number.
 - **disagreement between sources** — surface it and attribute each side;
   never average two numbers into one,
 - **a source contradicting itself** — an abstract whose headline figure

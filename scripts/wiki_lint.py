@@ -82,8 +82,12 @@ def uncited_blocks(text, source_citekeys):
     It cannot know that a sentence continues the citation of the one
     before it, so it is reported as a warning. `--strict-citations`
     promotes it for CI.
+
+    Returns (uncited, grounded). `grounded` carries each cited block with
+    the citekeys it rests on, so the caller can flag claims whose every
+    source is one that could never be deep-read -- see lint().
     """
-    flagged = []
+    flagged, grounded = [], []
     section, in_fence = None, False
     block = []
 
@@ -94,10 +98,11 @@ def uncited_blocks(text, source_citekeys):
         words = len(body.split())
         if words < MIN_CLAIM_WORDS:
             return
-        cites = WIKILINK_RE.findall(body)
-        if any(c.strip() in source_citekeys for c in cites):
-            return
+        cites = {c.strip() for c in WIKILINK_RE.findall(body)} & source_citekeys
         first = " ".join(body.split())[:70]
+        if cites:
+            grounded.append((section, first, cites))
+            return
         flagged.append((section, first))
 
     for raw in text.splitlines():
@@ -123,7 +128,7 @@ def uncited_blocks(text, source_citekeys):
             continue
         block.append(line)
     flush()
-    return flagged
+    return flagged, grounded
 
 
 def check_base_files(problems):
@@ -149,6 +154,9 @@ def lint():
     # problems and buries everything else. See summarise_pdf_issues().
     pdf_issues = []
     uncited = []
+    pending_claims = []          # (rel, section, excerpt, citekeys)
+    source_has_pdf = {}          # citekey -> bool, filled during the pass
+    ungrounded = []              # claims resting only on un-deep-readable sources
     notes, all_files = build_indices()
 
     # Obsidian resolves [[x]] ambiguously when two notes share a stem.
@@ -210,6 +218,7 @@ def lint():
                 cited_by[target].add(md.stem)
 
         if in_sources:
+            source_has_pdf[md.stem] = bool(fm.get("has_pdf"))
             _check_source(rel, md, fm, problems, pdf_issues)
         elif in_topics and md.name not in STAGING_FILES:
             _check_topic(rel, md, fm, topic_stems, problems, warnings,
@@ -219,8 +228,21 @@ def lint():
                 tags = [tags]
             # Only leaves hold synthesis; domain and hub pages are maps.
             if "topic" in tags:
-                for sect, excerpt in uncited_blocks(text, source_citekeys):
+                bad, ok = uncited_blocks(text, source_citekeys)
+                for sect, excerpt in bad:
                     uncited.append(f"{rel} [{sect}] -- {excerpt}...")
+                # Resolved after the loop, when has_pdf is known for every
+                # source regardless of the order files were visited in.
+                pending_claims.extend((rel, sect, ex, cks) for sect, ex, cks in ok)
+
+    # A claim whose every source lacks a PDF was written from abstracts.
+    # Abstracts strip operating conditions by design, which is where
+    # context errors concentrate -- a figure separated from the point it
+    # was measured at. Not proof of an error; a shortlist for wiki-verify.
+    for rel, sect, excerpt, cks in pending_claims:
+        if cks and not any(source_has_pdf.get(c) for c in cks):
+            ungrounded.append(f"{rel} [{sect}] -- {excerpt}... "
+                              f"(only: {', '.join(sorted(cks)[:3])})")
 
     check_base_files(problems)
     problems.extend(summarise_pdf_issues(pdf_issues, len(source_citekeys)))
@@ -248,6 +270,7 @@ def lint():
         },
         "multi_homed": multi_homed,
         "uncited": uncited,
+        "ungrounded": ungrounded,
     }
 
 
@@ -363,6 +386,10 @@ def main():
         bucket = "problems" if args.strict_citations else "warnings"
         label = "UNCITED CLAIM" if args.strict_citations else "uncited claim block"
         r[bucket].extend(f"{label}: {u}" for u in r["uncited"])
+    if r["ungrounded"]:
+        r["warnings"].extend(
+            f"claim rests only on abstract-only source(s): {u}"
+            for u in r["ungrounded"])
     if args.ignore_orphans:
         r["problems"] = [p for p in r["problems"] if not p.startswith("ORPHANED")]
     if args.json:
@@ -380,6 +407,9 @@ def main():
         if r["uncited"]:
             print(f"  claim blocks with NO citation: {len(r['uncited'])}"
                   f"  <- the one rule the vault rests on")
+        if r["ungrounded"]:
+            print(f"  claim blocks resting only on abstract-only sources: "
+                  f"{len(r['ungrounded'])}  <- audit these with wiki-verify")
         if r["orphaned"]:
             shown = ", ".join(r["orphaned"][:15])
             more = f" ... (+{len(r['orphaned']) - 15} more)" if len(r["orphaned"]) > 15 else ""

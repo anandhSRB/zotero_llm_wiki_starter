@@ -58,6 +58,12 @@ file.
    only a real citekey from `sources/`. Naming an author in prose
    ("Smith et al. found…") does not count either; use `[[citekey]]`.
 
+   **But a citation is the floor, not the ceiling.** It proves a sentence
+   has a source, not that the source supports it. See
+   **Claim fidelity** below for the five ways a well-cited claim is still
+   wrong — attribution drift, condition stripping, scope transfer, hedge
+   flattening and abstract/body mismatch.
+
 6. **Never add anything to the reference manager, and never write into
    `sources/`.** Literature selection is a human decision. Papers found
    through external search go in `candidate-sources.md` for review. Your
@@ -182,6 +188,7 @@ full before executing it.
 |---|---|
 | Empty vault, sources just synced, no topics yet | `wiki-bootstrap` |
 | New sources appeared; fold them into existing topics | `wiki-update` |
+| A claim looks wrong, or a page is about to be relied on | `wiki-verify` |
 | A page has grown too broad, or two pages overlap | `wiki-restructure` |
 | Check integrity and report what the lint finds | `wiki-lint` |
 | Look for literature not yet in the library | `wiki-find-sources` |
@@ -199,6 +206,70 @@ most common way to waste a session:
 Use `has_pdf` in the source frontmatter to know whether a deep read is
 even possible. When it is not, say so on the page rather than inferring
 from the abstract.
+
+## Claim fidelity: citing a source is not the same as representing it
+
+A `[[citekey]]` proves a sentence *has* a source. It proves nothing about
+whether the source says what the sentence claims. Every check in this
+vault verifies the first; only you can get the second right.
+
+Five ways a claim goes wrong while carrying a perfectly good citation.
+They are listed in the order they actually occur:
+
+**1. Attribution drift — the most common.** A paper's introduction cites
+*prior* work ("it has been shown that X…[12]"), and you attribute X to the
+paper you are reading. The quote is real; the owner is wrong.
+→ **Attribute to the producer, not the reporter.** Before writing "`[[x]]`
+found…", confirm `[[x]]` *produced* that result. If it is relaying someone
+else's, either cite the original or write "as reported in `[[x]]`".
+
+**2. Condition stripping.** "27% reduction **at 0.05 vol%**" becomes "27%
+reduction". The number survives; the thing that makes it true does not.
+→ **A figure without its operating point is wrong, not merely
+incomplete.** Conditions travel with the claim or the claim does not go on
+the page. Concentration, temperature, scale, population, load case —
+whatever the result depends on.
+
+**3. Scope transfer.** A 2.4 kW automotive bench result written as though
+it holds at the scale the page is about.
+→ **Mark scope whenever it differs from the page's subject**, in the
+sentence itself: "(single-cell, 2.4 kW automotive)". If the gap is large
+enough that transfer is an assumption, say that it is one.
+
+**4. Hedge flattening.** The source says "may suggest"; the page says
+"shows".
+→ **Keep the source's own epistemic strength.** Modelled is not measured;
+correlated is not caused; one study is not a literature.
+
+**5. Abstract/body mismatch.** The abstract's headline figure disagrees
+with the paper's own results table, and you take the abstract.
+→ **Prefer the body over the abstract**, and when they disagree **say so
+on the page** — that disagreement is a finding about the source and is
+worth more than either number alone.
+
+### Anchor load-bearing figures
+
+When a specific number carries weight — something a reader might cite, or
+act on — put a short verbatim fragment and a locator next to it:
+
+```markdown
+Radiator frontal area fell 27% at 0.05 vol% ZnO against a 50/50 water-EG
+baseline ("27% reduction in frontal area", Table 4) [[islamExperimental2017]].
+```
+
+This is not decoration. It is what makes the claim *checkable later by
+grep* instead of by re-reading the paper, and the quote carries its own
+hedging and conditions with it. Anchor the figures that matter; do not
+anchor every sentence.
+
+### When you cannot do this honestly
+
+If the source has no PDF, you have only an abstract — which strips
+conditions by design. Write what the abstract supports, say on the page
+that it is abstract-only, and do **not** supply the missing conditions
+from plausibility. `wiki_lint.py` reports claims resting only on
+abstract-only sources so they can be audited later; `wiki-verify` is the
+skill for that.
 
 ## Checkpointing: write each source's findings before reading the next
 
@@ -226,6 +297,10 @@ dealt with it:
 - [[citekeyC]] — abstract only (PDF unreadable: scanned, no text layer)
 - [[citekeyD]]
 ```
+
+A source whose claims have been re-checked against it carries
+`verified <date>` as well — written by `wiki-verify`, never by the deep
+read itself.
 
 An unannotated entry means **not yet examined**. That makes resuming
 mechanical rather than guesswork:
@@ -296,6 +371,8 @@ candidate-sources.md  externally-found papers awaiting human review
 scripts/
   wiki_config.py    paths + the frontmatter parser; no hardcoded paths
   wiki_lint.py      read-only integrity check — ground truth
+  wiki_digest.py    skimmable view of sources/; read-state and resume
+  wiki_audit.py     ranks existing claims by risk, for retrofitting
   zotero_sync.py    OPTIONAL Zotero adapter; you never run or edit this
   new_source.py     add a source by hand, without a reference manager
 .agents/skills/     the workflows above

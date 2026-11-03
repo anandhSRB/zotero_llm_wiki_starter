@@ -58,8 +58,11 @@ def abstract_of(text):
 # so an interrupted deep read can resume. See AGENTS.md -> Checkpointing.
 #   - [[citekey]] — deep read 2026-10-07     -> the PDF was read
 #   - [[citekey]] — abstract only (no PDF)   -> examined, no PDF to read
+#   - [[citekey]] — ..., verified 2026-11-03 -> claims re-checked (wiki-verify)
 #   - [[citekey]]                            -> not examined yet
+# "verified" is matched first, so a source carrying both reads as verified.
 READ_MARKERS = (
+    ("verified", "verified"),        # checked back against the source
     ("deep read", "deep"),
     ("abstract only", "abstract-only"),
 )
