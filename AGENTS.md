@@ -171,6 +171,24 @@ five words.
 Slugs are lowercase, hyphen-separated, and stable — renaming one breaks
 every `[[link]]` to it, so choose carefully rather than renaming later.
 
+### One paragraph, one line — do not hard-wrap
+
+Write prose in `topics/` **unwrapped: a single line per paragraph, and a
+single line per list item**, however long that line gets. Never break a
+line inside a paragraph.
+
+The reason is the reader. Obsidian renders a lone newline as a visible
+line break unless "Strict line breaks" is switched on, so a hard-wrapped
+paragraph shows up as ragged lines in the app. `sources/` is unwrapped —
+the sync adapter writes each abstract as one line — so wrapping `topics/`
+also makes the two layers look inconsistent side by side. Long lines are
+the right trade here: these pages are read in Obsidian, not in a
+terminal.
+
+This file, the templates and the skills *are* hard-wrapped, because they
+are read as plain text in an editor or on GitHub. That convention stops
+at `topics/`.
+
 ### A source can belong to several topics
 
 This is normal and expected, not a problem to resolve. A paper spanning

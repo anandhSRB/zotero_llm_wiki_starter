@@ -25,6 +25,19 @@ RUN
   python3 scripts/zotero_sync.py --once     # one pass, then exit
   python3 scripts/zotero_sync.py            # watch and keep syncing
   python3 scripts/zotero_sync.py --rebuild  # forget state, rewrite all
+  python3 scripts/zotero_sync.py --refresh-pdfs   # attach missing PDFs only
+
+IF YOU SYNCED WITH ZOTERO CLOSED
+The attachment lookup fails silently, every note is written with
+`has_pdf: false`, and its fingerprint is recorded -- so re-running does
+NOTHING, because nothing looks changed. Open Zotero and run:
+
+  python3 scripts/zotero_sync.py --refresh-pdfs
+
+That attaches the missing PDFs and edits only `has_pdf` and the `## PDF`
+section, leaving the rest of each note untouched. Add --dry-run first to
+see what it would do. It is also how you populate PDFs on a second
+machine without rewriting every note.
 
 Only notes whose Zotero metadata actually changed are rewritten, so
 re-runs are cheap and idempotent. Use --rebuild after upgrading this
@@ -42,6 +55,7 @@ Stdlib only. No pip install required.
 
 import argparse
 import json
+import re
 import shutil
 import sys
 import time
@@ -251,6 +265,86 @@ def sync_once(cfg, export_path, state_file, state):
     return state
 
 
+PDF_SECTION_RE = re.compile(r"(^##\s+PDF\s*$)(.*?)(?=^##\s|\Z)",
+                            re.MULTILINE | re.DOTALL)
+HAS_PDF_RE = re.compile(r"^has_pdf:\s*\w+\s*$", re.MULTILINE)
+
+
+def refresh_pdfs(cfg, dry_run=False):
+    """Attach PDFs to source notes that are missing them. Surgical.
+
+    Exists because of a failure that is easy to hit and silent: running
+    the sync while Zotero is closed. The attachment lookup fails, every
+    note is written with `has_pdf: false`, and its fingerprint is
+    recorded -- so a later re-run skips those items entirely and the PDFs
+    never arrive. A full `--rebuild` would fix it by rewriting every
+    note; this rewrites only what is actually wrong.
+
+    It edits two things in place -- the `has_pdf` line and the `## PDF`
+    section -- and leaves the rest of the file byte-for-byte alone, so
+    anything written under `## Notes` survives.
+    """
+    rpc = cfg["zotero_bbt_rpc"]
+    # Fail loudly rather than quietly doing nothing: a silent no-op here
+    # is the exact bug this command exists to repair.
+    try:
+        urllib.request.urlopen(
+            urllib.request.Request(rpc, data=b"{}",
+                                   headers={"Content-Type": "application/json"}),
+            timeout=5).read()
+    except Exception as e:
+        raise SystemExit(
+            f"Cannot reach Better BibTeX at {rpc}\n  {e}\n\n"
+            "Open Zotero (with Better BibTeX installed) and enable\n"
+            "Settings > Advanced > 'Allow other applications on this computer\n"
+            "to communicate with Zotero', then run this again.")
+
+    checked = updated = still_missing = 0
+    for note in sorted(SOURCES_DIR.glob("*.md")):
+        if note.stem.startswith("_"):
+            continue
+        text = note.read_text(encoding="utf-8")
+        m = HAS_PDF_RE.search(text)
+        if not m:
+            continue
+        declares_pdf = "true" in m.group(0)
+        on_disk = sorted(SOURCES_DIR.glob(f"{note.stem}*.pdf"))
+        if declares_pdf and on_disk:
+            continue  # already correct
+        checked += 1
+
+        names = []
+        for i, src in enumerate(p for p in get_pdf_paths(rpc, note.stem)
+                                if Path(p).exists()):
+            dest = SOURCES_DIR / f"{note.stem}{'' if i == 0 else f'-{i + 1}'}.pdf"
+            if not dry_run and not dest.exists():
+                shutil.copy2(src, dest)
+            names.append(dest.name)
+
+        if not names:
+            still_missing += 1
+            continue
+
+        body = "\n" + "\n".join(f"![[{n}]]" for n in names) + "\n"
+        new_text = HAS_PDF_RE.sub("has_pdf: true", text, count=1)
+        if PDF_SECTION_RE.search(new_text):
+            new_text = PDF_SECTION_RE.sub(lambda mm: mm.group(1) + body, new_text, count=1)
+        else:
+            new_text = new_text.rstrip("\n") + "\n\n## PDF" + body
+        if not dry_run:
+            note.write_text(new_text, encoding="utf-8")
+        updated += 1
+        print(f"  {'would attach' if dry_run else 'attached'} {len(names)} PDF(s): {note.name}")
+
+    print(f"\n{checked} note(s) lacked a usable PDF; "
+          f"{updated} {'would be ' if dry_run else ''}fixed, "
+          f"{still_missing} have no PDF in Zotero either.")
+    if still_missing:
+        print("Those are items with no attachment in your library -- expected "
+              "for web pages, reports and books.")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -258,9 +352,18 @@ def main():
     ap.add_argument("--once", action="store_true", help="one pass, then exit")
     ap.add_argument("--rebuild", action="store_true",
                     help="discard sync state so every note is rewritten")
+    ap.add_argument("--refresh-pdfs", action="store_true",
+                    help="attach missing PDFs to existing notes and stop; "
+                         "edits only has_pdf and the ## PDF section. Use after "
+                         "syncing with Zotero closed, or on a second machine.")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="with --refresh-pdfs, report what would change")
     args = ap.parse_args()
 
     cfg = load_config()
+    if args.refresh_pdfs:
+        return refresh_pdfs(cfg, dry_run=args.dry_run)
+
     export_path = resolve(cfg.get("zotero_export_json"))
     if not export_path:
         raise SystemExit(

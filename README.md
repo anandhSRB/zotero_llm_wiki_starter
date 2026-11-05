@@ -80,6 +80,17 @@ cp wiki.config.example.json wiki.config.json   # point it at that export
 python3 scripts/zotero_sync.py --once          # or omit --once to keep watching
 ```
 
+**If you synced with Zotero closed**, every note gets `has_pdf: false`
+and re-running fixes nothing — the fingerprints already match, so no item
+looks changed. Open Zotero, then:
+
+```bash
+python3 scripts/zotero_sync.py --refresh-pdfs
+```
+
+It attaches the missing PDFs and touches only `has_pdf` and the `## PDF`
+section. The same command populates PDFs on a second machine.
+
 **Without a reference manager** — add sources directly:
 
 ```bash
@@ -257,6 +268,7 @@ In [`AGENTS.md`](AGENTS.md), and worth knowing:
 | `wiki_digest.py --orphaned` | only unprocessed sources |
 | `wiki_digest.py --topic SLUG` | the sources behind one topic page, and which are still unread — the resume call |
 | `zotero_sync.py --once` | one Zotero sync pass (`--rebuild` to rewrite all) |
+| `zotero_sync.py --refresh-pdfs` | attach missing PDFs to existing notes; fixes a sync run made with Zotero closed |
 | `new_source.py` | add a source by hand (`--adopt` for loose PDFs) |
 | `sync_skill_pointers.py` | refresh per-agent skill pointers (`--check` for CI) |
 
